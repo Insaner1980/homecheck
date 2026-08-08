@@ -1,16 +1,19 @@
 package com.finnvek.homecheck.ui.assets
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.FilterChip
@@ -26,12 +29,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import com.finnvek.homecheck.R
+import com.finnvek.homecheck.ui.components.LocalImage
 import com.finnvek.homecheck.ui.components.localized
 import com.finnvek.homecheck.ui.theme.HomeSpacing
 import java.time.LocalDate
@@ -99,6 +104,14 @@ fun AssetFormScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(onClick = onTakePhoto) { Text(stringResource(R.string.take_photo)) }
                 OutlinedButton(onClick = onChoosePhoto) { Text(stringResource(R.string.choose_photo)) }
+            }
+            state.pendingPhotoUri?.let { photoUri ->
+                Spacer(Modifier.height(12.dp))
+                LocalImage(
+                    contentDescription = stringResource(R.string.photo),
+                    uri = Uri.parse(photoUri),
+                    modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(16.dp)),
+                )
             }
             Spacer(Modifier.height(16.dp))
             Field(
