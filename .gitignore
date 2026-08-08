@@ -1,8 +1,13 @@
 .gradle/
+.kotlin/
 .idea/
 local.properties
 **/build/
 captures/
 .externalNativeBuild/
 .cxx/
-
+*.jks
+*.keystore
+keystore.properties
+*.homecheck
+homecheck-code-review-prompts.md
