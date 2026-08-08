@@ -36,4 +36,4 @@ Use JDK 17 or newer and an Android SDK containing API 37:
 .\gradlew.bat connectedDebugAndroidTest  # when a device or emulator is connected
 ```
 
-Open the root folder in Android Studio to run and inspect Compose previews. Before publishing, configure release signing, Play App Signing, the billing product, store listing, screenshots, and the privacy-policy URL.
+Open the root folder in Android Studio to run and inspect Compose previews. Before every Play upload, set `versionCode` in `app/build.gradle.kts` to an integer greater than the highest code already uploaded and update `versionName` when appropriate. Also configure release signing, Play App Signing, the billing product, store listing, screenshots, and the privacy-policy URL.
