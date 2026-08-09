@@ -1,0 +1,23 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deepsec": "deepsec",
+    "deepsec:scan": "deepsec scan --project-id homecheck",
+    "deepsec:scan:custom": "deepsec scan --project-id homecheck --matchers android-exported-component,fileprovider-broad-path,android-uri-share-without-clipdata,backup-restore-database-file,sensitive-android-log",
+    "deepsec:process": "deepsec process --project-id homecheck --agent codex --model gpt-5.6-luna --thinking-level xhigh",
+    "deepsec:revalidate": "deepsec revalidate --project-id homecheck --agent codex --model gpt-5.6-luna --thinking-level xhigh --min-severity HIGH",
+    "deepsec:export": "deepsec export --project-id homecheck --format md-dir --out ./findings",
+    "deepsec:report": "pnpm run deepsec:scan && pnpm run deepsec:process && pnpm run deepsec:export",
+    "deepsec:report:custom": "pnpm run deepsec:scan:custom && pnpm run deepsec:process && pnpm run deepsec:export",
+    "test:matchers": "tsc --project tsconfig.json --noEmit false --outDir .tmp/test-build && node --test .tmp/test-build/matchers/security-matchers.test.js"
+  },
+  "dependencies": {
+    "deepsec": "2.2.9"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "typescript": "^7.0.2",
+    "zod": "4.4.3"
+  }
+}

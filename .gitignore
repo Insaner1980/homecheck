@@ -11,3 +11,4 @@ captures/
 keystore.properties
 *.homecheck
 homecheck-code-review-prompts.md
+/reports/

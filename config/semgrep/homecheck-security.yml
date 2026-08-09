@@ -1,0 +1,233 @@
+rules:
+  - id: homecheck-android-allowbackup-enabled
+    languages: [xml]
+    severity: ERROR
+    message: android:allowBackup="true" permits application data backups.
+    pattern: |
+      <application ... android:allowBackup="true" ...>
+
+  - id: homecheck-android-cleartext-enabled
+    languages: [xml]
+    severity: ERROR
+    message: android:usesCleartextTraffic="true" permits cleartext network traffic.
+    pattern: |
+      <application ... android:usesCleartextTraffic="true" ...>
+
+  - id: homecheck-android-exported-component
+    languages: [xml]
+    severity: WARNING
+    message: Review this exported Android component as a public entry point.
+    pattern-either:
+      - patterns:
+          - pattern: |
+              <activity ... android:exported="true" ...>
+          - pattern-not: |
+              <activity ... android:exported="true" ...>
+                ...
+                <intent-filter ...>
+                  ...
+                  <action ... android:name="android.intent.action.MAIN" .../>
+                  ...
+                  <category ... android:name="android.intent.category.LAUNCHER" .../>
+                  ...
+                </intent-filter>
+                ...
+              </activity>
+          - pattern-not: |
+              <activity ... android:exported="true" ...>
+                ...
+                <intent-filter ...>
+                  ...
+                  <category ... android:name="android.intent.category.LAUNCHER" .../>
+                  ...
+                  <action ... android:name="android.intent.action.MAIN" .../>
+                  ...
+                </intent-filter>
+                ...
+              </activity>
+      - pattern: |
+          <activity ... android:exported="true" ...>
+            ...
+            <intent-filter ...>
+              ...
+              <action ... android:name="android.intent.action.MAIN" .../>
+              ...
+              <category ... android:name="android.intent.category.LAUNCHER" .../>
+              ...
+            </intent-filter>
+            ...
+            <intent-filter ...>
+              ...
+            </intent-filter>
+            ...
+          </activity>
+      - pattern: |
+          <activity ... android:exported="true" ...>
+            ...
+            <intent-filter ...>
+              ...
+              <category ... android:name="android.intent.category.LAUNCHER" .../>
+              ...
+              <action ... android:name="android.intent.action.MAIN" .../>
+              ...
+            </intent-filter>
+            ...
+            <intent-filter ...>
+              ...
+            </intent-filter>
+            ...
+          </activity>
+      - pattern: |
+          <activity ... android:exported="true" ...>
+            ...
+            <intent-filter ...>
+              ...
+            </intent-filter>
+            ...
+            <intent-filter ...>
+              ...
+              <action ... android:name="android.intent.action.MAIN" .../>
+              ...
+              <category ... android:name="android.intent.category.LAUNCHER" .../>
+              ...
+            </intent-filter>
+            ...
+          </activity>
+      - pattern: |
+          <activity ... android:exported="true" ...>
+            ...
+            <intent-filter ...>
+              ...
+            </intent-filter>
+            ...
+            <intent-filter ...>
+              ...
+              <category ... android:name="android.intent.category.LAUNCHER" .../>
+              ...
+              <action ... android:name="android.intent.action.MAIN" .../>
+              ...
+            </intent-filter>
+            ...
+          </activity>
+      - pattern: |
+          <activity-alias ... android:exported="true" ...>
+      - pattern: |
+          <service ... android:exported="true" ...>
+      - pattern: |
+          <receiver ... android:exported="true" ...>
+      - pattern: |
+          <provider ... android:exported="true" ...>
+
+  - id: homecheck-fileprovider-root-path
+    languages: [xml]
+    severity: ERROR
+    message: FileProvider root-path exposes an overly broad filesystem scope.
+    pattern: |
+      <root-path ...>
+
+  - id: homecheck-fileprovider-external-path
+    languages: [xml]
+    severity: ERROR
+    message: FileProvider external-path exposes an overly broad external-storage scope.
+    pattern: |
+      <external-path ...>
+
+  - id: homecheck-fileprovider-dot-path
+    languages: [xml]
+    severity: ERROR
+    message: FileProvider path="." exposes an entire configured storage root.
+    pattern-either:
+      - pattern: |
+          <files-path ... path="." ...>
+      - pattern: |
+          <cache-path ... path="." ...>
+      - pattern: |
+          <external-files-path ... path="." ...>
+      - pattern: |
+          <external-cache-path ... path="." ...>
+
+  - id: homecheck-hardcoded-signing-credential
+    languages: [generic]
+    severity: ERROR
+    message: Do not hardcode Android signing credentials in project files.
+    paths:
+      include:
+        - "*.gradle"
+        - "*.gradle.kts"
+    pattern-regex: '(?i)(storePassword|keyPassword)\s*(?:=|:)\s*["''][^"'']+["'']'
+
+  - id: homecheck-hardcoded-signing-property
+    languages: [generic]
+    severity: ERROR
+    message: Do not store Android signing credentials as literal properties values.
+    paths:
+      include:
+        - "*.properties"
+    patterns:
+      - pattern-regex: '(?im)^[ \t]*(?:storePassword|keyPassword)[ \t]*(?:=|:)[ \t]*(?:"[^"\r\n]+"|''[^''\r\n]+''|[^\s#][^#\r\n]*)[ \t]*(?:#.*)?$'
+      - pattern-not-regex: '(?i)(?:=|:)[ \t]*(?:"|\'')?(?:\$\{[^}\r\n]+\}|change[_-]?me|replace[_-]?me|placeholder|todo)(?:"|\'')?[ \t]*(?:#.*)?$'
+
+  - id: homecheck-hardcoded-secret
+    languages: [generic]
+    severity: ERROR
+    message: Do not hardcode secrets or private keys in source or configuration files.
+    paths:
+      include:
+        - "*.kt"
+        - "*.java"
+        - "*.gradle"
+        - "*.gradle.kts"
+    pattern-regex: '(?i)(api[_-]?key|client[_-]?secret|access[_-]?token|private[_-]?key|password)\s*(?:=|:)\s*["''][A-Za-z0-9_./+=-]{8,}["'']'
+
+  - id: homecheck-hardcoded-secret-property
+    languages: [generic]
+    severity: ERROR
+    message: Do not store secrets as literal properties values.
+    paths:
+      include:
+        - "*.properties"
+    patterns:
+      - pattern-regex: '(?im)^[ \t]*(?:api[_-]?key|client[_-]?secret|access[_-]?token|private[_-]?key|password)[ \t]*(?:=|:)[ \t]*(?:"[^"\r\n]{8,}"|''[^''\r\n]{8,}''|[^\s#][^#\r\n]{7,})[ \t]*(?:#.*)?$'
+      - pattern-not-regex: '(?i)(?:=|:)[ \t]*(?:"|\'')?(?:\$\{[^}\r\n]+\}|change[_-]?me|replace[_-]?me|placeholder|todo)(?:"|\'')?[ \t]*(?:#.*)?$'
+
+  - id: homecheck-weak-cryptography
+    languages: [kotlin]
+    severity: ERROR
+    message: Weak cryptographic algorithms must not protect application data.
+    pattern-either:
+      - pattern: MessageDigest.getInstance("MD5")
+      - pattern: MessageDigest.getInstance("SHA-1")
+      - pattern: Cipher.getInstance("DES")
+      - pattern: Cipher.getInstance("DES/$MODE/$PADDING")
+      - pattern: Cipher.getInstance("DESede")
+      - pattern: Cipher.getInstance("RC4")
+
+  - id: homecheck-unsafe-webview-setting
+    languages: [kotlin]
+    severity: ERROR
+    message: Review unsafe WebView capabilities and restrict untrusted content.
+    pattern-either:
+      - pattern: $WEBVIEW.settings.javaScriptEnabled = true
+      - pattern: $WEBVIEW.settings.allowFileAccess = true
+      - pattern: $WEBVIEW.settings.allowContentAccess = true
+      - pattern: $WEBVIEW.addJavascriptInterface(...)
+
+  - id: homecheck-sensitive-android-log
+    languages: [kotlin]
+    severity: WARNING
+    message: Do not write sensitive URI, file, backup, or database data to Android logs.
+    patterns:
+      - pattern-either:
+          - pattern: Log.v(..., $MESSAGE)
+          - pattern: Log.d(..., $MESSAGE)
+          - pattern: Log.i(..., $MESSAGE)
+          - pattern: Log.w(..., $MESSAGE)
+          - pattern: Log.e(..., $MESSAGE)
+          - pattern: android.util.Log.v(..., $MESSAGE)
+          - pattern: android.util.Log.d(..., $MESSAGE)
+          - pattern: android.util.Log.i(..., $MESSAGE)
+          - pattern: android.util.Log.w(..., $MESSAGE)
+          - pattern: android.util.Log.e(..., $MESSAGE)
+      - metavariable-regex:
+          metavariable: $MESSAGE
+          regex: '(?i).*(uri|file|path|backup|restore|database|db|attachment|token|secret|password).*'

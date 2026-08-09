@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "projectId": "homecheck",
+  "exceptionsFile": "config/check-exceptions.json",
+  "modules": [
+    {
+      "path": ":app",
+      "relativePath": "app",
+      "kind": "android-application",
+      "id": "app",
+      "gradlePath": ":app",
+      "type": "android-application",
+      "required": true,
+      "variants": ["debug", "release"],
+      "sourceSets": ["main", "debug", "test", "androidTest"],
+      "tasks": {
+        "build": [{ "path": ":app:assembleDebug", "availability": "declared" }],
+        "test": [{ "path": ":app:testDebugUnitTest", "availability": "declared" }],
+        "lint": [
+          { "path": ":app:lintDebug", "availability": "declared" },
+          { "path": ":app:lintRelease", "availability": "declared" }
+        ],
+        "ktlint": [{ "path": ":app:ktlintCheck", "availability": "declared" }],
+        "detekt": [{ "path": ":app:detekt", "availability": "declared" }],
+        "stability": [{ "path": ":app:stabilityCheck", "availability": "declared" }]
+      },
+      "dependencyConfigurations": ["debugRuntimeClasspath", "releaseRuntimeClasspath"],
+      "scopes": {
+        "semgrep": ["app/src"],
+        "mobsf": [],
+        "pmd": ["app/src"],
+        "osv": ["gradle/libs.versions.toml"],
+        "owasp": []
+      }
+    }
+  ],
+  "buildTasks": [":app:assembleDebug"],
+  "testTasks": [":app:testDebugUnitTest"],
+  "includedBuilds": [],
+  "checks": {
+    "ktlintTasks": [":app:ktlintCheck"],
+    "ktlintReportFormat": "detekt-checkstyle",
+    "detektTasks": [":app:detekt"],
+    "stabilityTasks": [":app:stabilityCheck"],
+    "lintTasks": [":app:lintDebug"],
+    "fullLintTasks": [":app:lintDebug", ":app:lintRelease"],
+    "dependencyConfigurations": ["debugRuntimeClasspath", "releaseRuntimeClasspath"],
+    "dependencyCheckTasks": [":app:dependencyCheckAnalyze"],
+    "semgrepConfig": "config/semgrep/homecheck-security.yml"
+  },
+  "phases": {
+    "build": { "required": true, "applicable": true, "timeoutMinutes": 20 },
+    "test": { "required": true, "applicable": true, "timeoutMinutes": 20 },
+    "lint": { "required": false, "applicable": true, "timeoutMinutes": 20 },
+    "ktlint": { "required": false, "applicable": true, "timeoutMinutes": 20 },
+    "detekt": { "required": false, "applicable": true, "timeoutMinutes": 20 },
+    "stability": { "required": false, "applicable": true, "timeoutMinutes": 20 }
+  },
+  "tools": [
+    { "id": "gradle-wrapper", "required": true }
+  ],
+  "externalServices": [
+    { "id": "none", "required": false, "condition": "not-used" }
+  ],
+  "reports": {
+    "directory": "reports",
+    "compatibilityFiles": ["build-check.txt", "test-check.txt"]
+  },
+  "exceptions": {
+    "registry": "config/check-exceptions.json"
+  }
+}

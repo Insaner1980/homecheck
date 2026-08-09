@@ -1,0 +1,18 @@
+config:
+  validation: true
+  warningsAsErrors: false
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated:
+      - Composable
+
+style:
+  MaxLineLength:
+    maxLineLength: 140
+
+Compose:
+  ParameterNaming:
+    allowedLambdaParameterNames: onGetStarted,onNotificationHandled
+  ViewModelForwarding:
+    allowedForwarding: AppNavigation,MaintenanceRoute,SettingsRoute

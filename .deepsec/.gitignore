@@ -1,0 +1,10 @@
+node_modules/
+data/*/project.json
+data/*/tech.json
+data/*/files/
+data/*/runs/
+data/*/reports/
+data/*/revalidation/
+findings/
+comment.md
+.tmp/

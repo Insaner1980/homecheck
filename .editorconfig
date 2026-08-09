@@ -1,0 +1,7 @@
+root = true
+
+[*.{kt,kts}]
+max_line_length = 140
+ktlint_function_naming_ignore_when_annotated_with = Composable
+compose_allowed_forwarding = AppNavigation, MaintenanceRoute, SettingsRoute
+compose_allowed_lambda_parameter_names = onGetStarted, onNotificationHandled
