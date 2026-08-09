@@ -13,8 +13,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -61,12 +61,15 @@ fun MaintenanceScreen(
 ) {
     val assetsById = state.assets.associateBy(AssetEntity::id)
     val today = LocalDate.now()
-    val groups = listOf(
-        stringResource(R.string.overdue) to state.tasks.filter { it.dueDate.isBefore(today) },
-        stringResource(R.string.today) to state.tasks.filter { it.dueDate == today },
-        stringResource(R.string.this_week) to state.tasks.filter { it.dueDate.isAfter(today) && !it.dueDate.isAfter(today.plusDays(7)) },
-        stringResource(R.string.later) to state.tasks.filter { it.dueDate.isAfter(today.plusDays(7)) },
-    ).filter { it.second.isNotEmpty() }
+    val groups =
+        listOf(
+            stringResource(R.string.overdue) to state.tasks.filter { it.dueDate.isBefore(today) },
+            stringResource(R.string.today) to state.tasks.filter { it.dueDate == today },
+            stringResource(
+                R.string.this_week,
+            ) to state.tasks.filter { it.dueDate.isAfter(today) && !it.dueDate.isAfter(today.plusDays(7)) },
+            stringResource(R.string.later) to state.tasks.filter { it.dueDate.isAfter(today.plusDays(7)) },
+        ).filter { it.second.isNotEmpty() }
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = { TopAppBar(title = { Text(stringResource(R.string.maintenance)) }) },
@@ -80,11 +83,12 @@ fun MaintenanceScreen(
     ) { padding ->
         LazyColumn(
             Modifier.fillMaxSize().padding(padding),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                start = HomeSpacing.page,
-                end = HomeSpacing.page,
-                bottom = 96.dp,
-            ),
+            contentPadding =
+                androidx.compose.foundation.layout.PaddingValues(
+                    start = HomeSpacing.page,
+                    end = HomeSpacing.page,
+                    bottom = 96.dp,
+                ),
         ) {
             item {
                 Row(Modifier.fillMaxWidth()) {
@@ -121,7 +125,13 @@ fun MaintenanceScreen(
                 item { EmptyMessage(stringResource(R.string.nothing_scheduled), stringResource(R.string.nothing_scheduled_body)) }
             } else {
                 groups.forEach { (label, tasks) ->
-                    item { Text(label, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)) }
+                    item {
+                        Text(
+                            label,
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+                        )
+                    }
                     items(tasks, key = MaintenanceTaskEntity::id) { task ->
                         TaskRow(task, assetsById[task.assetId]?.name.orEmpty(), onTask, onComplete)
                     }
@@ -139,36 +149,57 @@ private fun TaskRow(
     onComplete: (String) -> Unit,
 ) {
     val context = LocalContext.current
-    Row(
-        Modifier.fillMaxWidth().clickable { onTask(task.id) }.padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(task.title, style = MaterialTheme.typography.titleMedium)
-            Text(assetName, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(dueLabel(context, task.dueDate), color = if (task.dueDate.isBefore(LocalDate.now())) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary)
+    Column {
+        Row(
+            Modifier.fillMaxWidth().clickable { onTask(task.id) }.padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(task.title, style = MaterialTheme.typography.titleMedium)
+                Text(assetName, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    dueLabel(context, task.dueDate),
+                    color =
+                        if (task.dueDate.isBefore(
+                                LocalDate.now(),
+                            )
+                        ) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.tertiary
+                        },
+                )
+            }
+            FilledIconButton(onClick = { onComplete(task.id) }) {
+                Icon(Icons.Default.Check, stringResource(R.string.mark_complete, task.title))
+            }
         }
-        FilledIconButton(onClick = { onComplete(task.id) }) {
-            Icon(Icons.Default.Check, stringResource(R.string.mark_complete, task.title))
-        }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
     }
-    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
 }
 
 @Composable
-private fun HistoryRow(entry: MaintenanceHistoryEntity, assetName: String) {
+private fun HistoryRow(
+    entry: MaintenanceHistoryEntity,
+    assetName: String,
+) {
     val date = Instant.ofEpochMilli(entry.completedAt).atZone(ZoneId.systemDefault()).toLocalDate()
-    Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
-        Text(entry.titleSnapshot, style = MaterialTheme.typography.titleMedium)
-        Text(assetName, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(stringResource(R.string.completed_on, date.localized()), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        entry.note?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+    Column {
+        Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+            Text(entry.titleSnapshot, style = MaterialTheme.typography.titleMedium)
+            Text(assetName, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.completed_on, date.localized()), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            entry.note?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+        }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
     }
-    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
 }
 
 @Composable
-private fun EmptyMessage(title: String, body: String) {
+private fun EmptyMessage(
+    title: String,
+    body: String,
+) {
     Column(Modifier.padding(top = 24.dp)) {
         Text(title, style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(8.dp))

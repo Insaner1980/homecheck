@@ -70,7 +70,11 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBack,
+                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) }
+                },
             )
         },
     ) { padding ->
@@ -83,17 +87,20 @@ fun SettingsScreen(
         ) {
             SettingsSection(stringResource(R.string.appearance))
             ThemeMode.entries.forEach { mode ->
-                val label = when (mode) {
-                    ThemeMode.SYSTEM -> stringResource(R.string.system_default)
-                    ThemeMode.LIGHT -> stringResource(R.string.light)
-                    ThemeMode.DARK -> stringResource(R.string.dark)
-                }
+                val label =
+                    when (mode) {
+                        ThemeMode.SYSTEM -> stringResource(R.string.system_default)
+                        ThemeMode.LIGHT -> stringResource(R.string.light)
+                        ThemeMode.DARK -> stringResource(R.string.dark)
+                    }
                 Row(
-                    Modifier.fillMaxWidth().selectable(
-                        selected = preferences.themeMode == mode,
-                        onClick = { onTheme(mode) },
-                        role = Role.RadioButton,
-                    ).padding(vertical = 8.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .selectable(
+                            selected = preferences.themeMode == mode,
+                            onClick = { onTheme(mode) },
+                            role = Role.RadioButton,
+                        ).padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     RadioButton(selected = preferences.themeMode == mode, onClick = null)
@@ -104,8 +111,10 @@ fun SettingsScreen(
 
             SettingsSection(stringResource(R.string.reminders))
             ToggleRow(stringResource(R.string.reminders_enabled), preferences.remindersEnabled, onReminders)
-            val time = LocalTime.of(preferences.reminderHour, preferences.reminderMinute)
-                .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
+            val time =
+                LocalTime
+                    .of(preferences.reminderHour, preferences.reminderMinute)
+                    .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
             TextButton(onClick = onReminderTime, enabled = preferences.remindersEnabled) {
                 Text(stringResource(R.string.reminder_time_value, time))
             }
@@ -128,7 +137,10 @@ fun SettingsScreen(
                 Text(stringResource(R.string.premium_active), style = MaterialTheme.typography.titleMedium)
                 Text(stringResource(R.string.lifetime_purchase_active), color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
-                Button(onClick = onUnlockPremium, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.unlock_unlimited_assets)) }
+                Button(
+                    onClick = onUnlockPremium,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.unlock_unlimited_assets)) }
             }
             TextButton(onClick = onRestorePurchase) { Text(stringResource(R.string.restore_purchase)) }
 
@@ -138,20 +150,30 @@ fun SettingsScreen(
             Spacer(Modifier.height(12.dp))
             Text(stringResource(R.string.privacy_statement), color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))
-            Text(stringResource(R.string.play_purchase_statement), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                stringResource(R.string.play_purchase_statement),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
 
 @Composable private fun SettingsSection(title: String) {
-    Spacer(Modifier.height(HomeSpacing.section))
-    Text(title, style = MaterialTheme.typography.titleLarge)
-    Spacer(Modifier.height(8.dp))
+    Column {
+        Spacer(Modifier.height(HomeSpacing.section))
+        Text(title, style = MaterialTheme.typography.titleLarge)
+        Spacer(Modifier.height(8.dp))
+    }
 }
 
-@Composable private fun ToggleRow(label: String, checked: Boolean, onChecked: (Boolean) -> Unit) {
+@Composable private fun ToggleRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
     Row(
-        Modifier.fillMaxWidth().toggleable(checked, role = Role.Switch, onValueChange = onChecked).padding(vertical = 8.dp),
+        Modifier.fillMaxWidth().toggleable(checked, role = Role.Switch, onValueChange = onCheckedChange).padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, Modifier.weight(1f))

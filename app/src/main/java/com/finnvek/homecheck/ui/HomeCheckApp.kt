@@ -14,6 +14,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -54,9 +55,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.finnvek.homecheck.R
 import com.finnvek.homecheck.NOTIFICATION_TARGET_ASSET_PREFIX
 import com.finnvek.homecheck.NOTIFICATION_TARGET_MAINTENANCE
+import com.finnvek.homecheck.R
 import com.finnvek.homecheck.billing.BillingEvent
 import com.finnvek.homecheck.data.local.entity.AttachmentEntity
 import com.finnvek.homecheck.data.local.entity.AttachmentType
@@ -80,9 +81,9 @@ import com.finnvek.homecheck.ui.settings.SettingsEvent
 import com.finnvek.homecheck.ui.settings.SettingsScreen
 import com.finnvek.homecheck.ui.settings.SettingsViewModel
 import com.finnvek.homecheck.ui.theme.HomeCheckTheme
+import kotlinx.coroutines.launch
 import java.io.File
 import java.time.LocalDate
-import kotlinx.coroutines.launch
 
 private object Routes {
     const val HOME = "home"
@@ -96,14 +97,30 @@ private object Routes {
     const val EDIT_MAINTENANCE = "maintenance/{taskId}/edit"
 
     fun asset(id: String) = "asset/$id"
+
     fun editAsset(id: String) = "asset/$id/edit"
+
     fun newMaintenance(assetId: String? = null) = if (assetId == null) "maintenance/new" else "maintenance/new?assetId=$assetId"
+
     fun editMaintenance(taskId: String) = "maintenance/$taskId/edit"
+}
+
+internal class NotificationHandledCallback(
+    callback: () -> Unit,
+) {
+    private var current by mutableStateOf(callback)
+
+    fun update(callback: () -> Unit) {
+        current = callback
+    }
+
+    operator fun invoke() = current()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeCheckApp(
+    modifier: Modifier = Modifier,
     notificationTarget: String? = null,
     onNotificationHandled: () -> Unit = {},
     mainViewModel: MainViewModel = hiltViewModel(),
@@ -116,27 +133,31 @@ fun HomeCheckApp(
     val activity = context.findActivity()
     val navController = rememberNavController()
     val snackbar = remember { SnackbarHostState() }
+    val notificationHandledCallback = remember { NotificationHandledCallback(onNotificationHandled) }
+    notificationHandledCallback.update(onNotificationHandled)
 
     HomeCheckTheme(
         themeMode = preferences?.themeMode ?: com.finnvek.homecheck.data.preferences.ThemeMode.SYSTEM,
         dynamicColor = preferences?.dynamicColor ?: false,
     ) {
-        val loaded = preferences
-        if (loaded == null) {
-            Surface(modifier = Modifier) {}
-        } else if (!loaded.onboardingComplete) {
-            OnboardingScreen(onGetStarted = mainViewModel::completeOnboarding)
-        } else {
-            AppNavigation(navController, mainViewModel, snackbar)
-        }
-        if (showPremium) {
-            ModalBottomSheet(onDismissRequest = mainViewModel::dismissPremium) {
-                PremiumSheet(
-                    state = billing,
-                    onPurchase = { activity?.let(mainViewModel::launchPurchase) },
-                    onRestore = mainViewModel::restorePurchase,
-                    onDismiss = mainViewModel::dismissPremium,
-                )
+        Box(modifier = modifier) {
+            val loaded = preferences
+            if (loaded == null) {
+                Surface(modifier = Modifier) {}
+            } else if (!loaded.onboardingComplete) {
+                OnboardingScreen(onGetStarted = mainViewModel::completeOnboarding)
+            } else {
+                AppNavigation(navController, mainViewModel, snackbar)
+            }
+            if (showPremium) {
+                ModalBottomSheet(onDismissRequest = mainViewModel::dismissPremium) {
+                    PremiumSheet(
+                        state = billing,
+                        onPurchase = { activity?.let(mainViewModel::launchPurchase) },
+                        onRestore = mainViewModel::restorePurchase,
+                        onDismiss = mainViewModel::dismissPremium,
+                    )
+                }
             }
         }
     }
@@ -149,25 +170,29 @@ fun HomeCheckApp(
     LaunchedEffect(notificationTarget, preferences?.onboardingComplete) {
         if (notificationTarget != null && preferences?.onboardingComplete == true) {
             when {
-                notificationTarget == NOTIFICATION_TARGET_MAINTENANCE -> navController.navigatePrimary(Routes.MAINTENANCE)
+                notificationTarget == NOTIFICATION_TARGET_MAINTENANCE -> {
+                    navController.navigatePrimary(Routes.MAINTENANCE)
+                }
+
                 notificationTarget.startsWith(NOTIFICATION_TARGET_ASSET_PREFIX) -> {
                     val assetId = notificationTarget.removePrefix(NOTIFICATION_TARGET_ASSET_PREFIX)
                     if (assetId.isNotBlank()) navController.navigate(Routes.asset(assetId))
                 }
             }
-            onNotificationHandled()
+            notificationHandledCallback()
         }
     }
     LaunchedEffect(Unit) {
         mainViewModel.billingEvents.collect { event ->
-            val message = when (event) {
-                BillingEvent.PURCHASED, BillingEvent.ALREADY_OWNED -> R.string.purchase_completed
-                BillingEvent.PENDING -> R.string.purchase_pending
-                BillingEvent.CANCELLED -> R.string.purchase_cancelled
-                BillingEvent.NOT_FOUND -> R.string.purchase_not_found
-                BillingEvent.UNAVAILABLE -> R.string.billing_unavailable
-                BillingEvent.FAILED -> R.string.purchase_failed
-            }
+            val message =
+                when (event) {
+                    BillingEvent.PURCHASED, BillingEvent.ALREADY_OWNED -> R.string.purchase_completed
+                    BillingEvent.PENDING -> R.string.purchase_pending
+                    BillingEvent.CANCELLED -> R.string.purchase_cancelled
+                    BillingEvent.NOT_FOUND -> R.string.purchase_not_found
+                    BillingEvent.UNAVAILABLE -> R.string.billing_unavailable
+                    BillingEvent.FAILED -> R.string.purchase_failed
+                }
             if (event == BillingEvent.PURCHASED || event == BillingEvent.ALREADY_OWNED) mainViewModel.dismissPremium()
             snackbar.showSnackbar(resources.getString(message))
         }
@@ -234,7 +259,13 @@ private fun AppNavigation(
             }
             composable(
                 Routes.NEW_MAINTENANCE,
-                arguments = listOf(navArgument("assetId") { type = NavType.StringType; defaultValue = "" }),
+                arguments =
+                    listOf(
+                        navArgument("assetId") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        },
+                    ),
             ) {
                 MaintenanceFormRoute(navController)
             }
@@ -249,12 +280,16 @@ private fun AppNavigation(
 }
 
 @Composable
-private fun BottomNavigation(route: String?, navController: NavHostController) {
-    val items = listOf(
-        Triple(Routes.HOME, R.string.home, Icons.Default.Home),
-        Triple(Routes.ASSETS, R.string.assets, Icons.Default.Search),
-        Triple(Routes.MAINTENANCE, R.string.maintenance, Icons.Default.Check),
-    )
+private fun BottomNavigation(
+    route: String?,
+    navController: NavHostController,
+) {
+    val items =
+        listOf(
+            Triple(Routes.HOME, R.string.home, Icons.Default.Home),
+            Triple(Routes.ASSETS, R.string.assets, Icons.Default.Search),
+            Triple(Routes.MAINTENANCE, R.string.maintenance, Icons.Default.Check),
+        )
     NavigationBar {
         items.forEach { (destination, label, icon) ->
             NavigationBarItem(
@@ -297,10 +332,17 @@ private fun MaintenanceRoute(
         viewModel.events.collect { event ->
             when (event) {
                 is MaintenanceEvent.Completed -> {
-                    val result = snackbar.showSnackbar(resources.getString(R.string.maintenance_completed), resources.getString(R.string.undo))
+                    val result =
+                        snackbar.showSnackbar(
+                            resources.getString(R.string.maintenance_completed),
+                            resources.getString(R.string.undo),
+                        )
                     if (result == SnackbarResult.ActionPerformed) viewModel.undo(event.result)
                 }
-                MaintenanceEvent.Failed -> snackbar.showSnackbar(resources.getString(R.string.maintenance_completion_failed))
+
+                MaintenanceEvent.Failed -> {
+                    snackbar.showSnackbar(resources.getString(R.string.maintenance_completion_failed))
+                }
             }
         }
     }
@@ -317,13 +359,15 @@ private fun AssetFormRoute(
     val context = LocalContext.current
     val resources = LocalResources.current
     var cameraFile by remember { mutableStateOf<File?>(null) }
-    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        uri?.let { viewModel.setPhoto(it) }
-    }
-    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        val file = cameraFile
-        if (success && file != null) viewModel.setPhoto(viewModel.cameraUri(file), file) else file?.delete()
-    }
+    val photoPicker =
+        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            uri?.let { viewModel.setPhoto(it) }
+        }
+    val camera =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            val file = cameraFile
+            if (success && file != null) viewModel.setPhoto(viewModel.cameraUri(file), file) else file?.delete()
+        }
     AssetFormScreen(
         state,
         viewModel::update,
@@ -331,14 +375,21 @@ private fun AssetFormRoute(
         onBack = navController::popBackStack,
         onChoosePhoto = { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
         onTakePhoto = {
-            viewModel.createCameraFile().also { file -> cameraFile = file; camera.launch(viewModel.cameraUri(file)) }
+            viewModel.createCameraFile().also { file ->
+                cameraFile = file
+                camera.launch(viewModel.cameraUri(file))
+            }
         },
         onPickPurchaseDate = { showDatePicker(context, state.purchaseDate) { viewModel.update(state.copy(purchaseDate = it)) } },
-        onPickWarrantyDate = { showDatePicker(context, state.warrantyExpirationDate) { viewModel.update(state.copy(warrantyExpirationDate = it)) } },
+        onPickWarrantyDate = {
+            showDatePicker(context, state.warrantyExpirationDate) { viewModel.update(state.copy(warrantyExpirationDate = it)) }
+        },
     )
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
-            if (isEditing) navController.popBackStack() else {
+            if (isEditing) {
+                navController.popBackStack()
+            } else {
                 navController.navigate(Routes.asset(event.assetId)) { popUpTo(Routes.NEW_ASSET) { inclusive = true } }
             }
             if (event.photoImportFailed) snackbar.showSnackbar(resources.getString(R.string.photo_import_failed))
@@ -358,9 +409,11 @@ private fun AssetDetailRoute(
     val scope = rememberCoroutineScope()
     var documentType by remember { mutableStateOf(AttachmentType.OTHER) }
     var preview by remember { mutableStateOf<AttachmentEntity?>(null) }
-    val documentPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let { viewModel.importDocument(it, documentType) }
-    }
+    val documentPicker =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let { viewModel.importDocument(it, documentType) }
+        }
+
     fun open(attachment: AttachmentEntity) {
         val file = viewModel.attachmentStore.fileFor(attachment.localPath)
         if (!file.isFile) {
@@ -370,7 +423,8 @@ private fun AssetDetailRoute(
         } else {
             try {
                 context.startActivity(
-                    Intent(Intent.ACTION_VIEW).setDataAndType(viewModel.attachmentStore.uriFor(attachment.localPath), attachment.mimeType)
+                    Intent(Intent.ACTION_VIEW)
+                        .setDataAndType(viewModel.attachmentStore.uriFor(attachment.localPath), attachment.mimeType)
                         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
                 )
             } catch (_: ActivityNotFoundException) {
@@ -378,16 +432,18 @@ private fun AssetDetailRoute(
             }
         }
     }
+
     fun share(attachment: AttachmentEntity) {
         val file = viewModel.attachmentStore.fileFor(attachment.localPath)
         if (!file.isFile) {
             scope.launch { snackbar.showSnackbar(resources.getString(R.string.file_missing)) }
             return
         }
-        val intent = Intent(Intent.ACTION_SEND)
-            .setType(attachment.mimeType)
-            .putExtra(Intent.EXTRA_STREAM, viewModel.attachmentStore.uriFor(attachment.localPath))
-            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val intent =
+            Intent(Intent.ACTION_SEND)
+                .setType(attachment.mimeType)
+                .putExtra(Intent.EXTRA_STREAM, viewModel.attachmentStore.uriFor(attachment.localPath))
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         context.startActivity(Intent.createChooser(intent, resources.getString(R.string.share)))
     }
     AssetDetailScreen(
@@ -399,7 +455,10 @@ private fun AssetDetailRoute(
         onAddMaintenance = { navController.navigate(Routes.newMaintenance(viewModel.assetId)) },
         onEditTask = { navController.navigate(Routes.editMaintenance(it)) },
         onDeleteTask = viewModel::deleteTask,
-        onAddDocument = { type -> documentType = type; documentPicker.launch(arrayOf("application/pdf", "image/*")) },
+        onAddDocument = { type ->
+            documentType = type
+            documentPicker.launch(arrayOf("application/pdf", "image/*"))
+        },
         onOpenAttachment = ::open,
         onShareAttachment = ::share,
         onRenameAttachment = viewModel::renameAttachment,
@@ -444,7 +503,11 @@ private fun MaintenanceFormRoute(
         viewModel::update,
         onPickDueDate = { showDatePicker(context, state.dueDate) { viewModel.update(state.copy(dueDate = it, dueDateError = false)) } },
         onSave = {
-            if (state.reminderEnabled && Build.VERSION.SDK_INT >= 33 && !notificationsGranted(context)) permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            if (state.reminderEnabled && Build.VERSION.SDK_INT >= 33 &&
+                !notificationsGranted(context)
+            ) {
+                permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
             viewModel.save()
         },
         onBack = navController::popBackStack,
@@ -464,7 +527,8 @@ private fun SettingsRoute(
     val resources = LocalResources.current
     var restoreUri by remember { mutableStateOf<Uri?>(null) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
-    val backup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri -> uri?.let(viewModel::backup) }
+    val backup =
+        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri -> uri?.let(viewModel::backup) }
     val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> restoreUri = uri }
     SettingsScreen(
         state = baseState.copy(notificationsGranted = notificationsGranted(context)),
@@ -472,12 +536,22 @@ private fun SettingsRoute(
         onTheme = viewModel::setTheme,
         onDynamicColor = viewModel::setDynamicColor,
         onReminders = { enabled ->
-            if (enabled && Build.VERSION.SDK_INT >= 33 && !notificationsGranted(context)) permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            if (enabled && Build.VERSION.SDK_INT >= 33 &&
+                !notificationsGranted(context)
+            ) {
+                permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
             viewModel.setReminders(enabled)
         },
         onReminderTime = {
             val preferences = baseState.preferences
-            TimePickerDialog(context, { _, hour, minute -> viewModel.setReminderTime(hour, minute) }, preferences.reminderHour, preferences.reminderMinute, false).show()
+            TimePickerDialog(
+                context,
+                { _, hour, minute -> viewModel.setReminderTime(hour, minute) },
+                preferences.reminderHour,
+                preferences.reminderMinute,
+                false,
+            ).show()
         },
         onRequestNotificationPermission = { if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS) },
         onBackup = { backup.launch("homecheck-backup-${LocalDate.now()}.homecheck") },
@@ -490,23 +564,36 @@ private fun SettingsRoute(
             onDismissRequest = { restoreUri = null },
             title = { Text(stringResource(R.string.restore_backup_question)) },
             text = { Text(stringResource(R.string.restore_backup_warning)) },
-            confirmButton = { TextButton(onClick = { restoreUri = null; viewModel.restore(uri) }) { Text(stringResource(R.string.restore)) } },
+            confirmButton = {
+                TextButton(onClick = {
+                    restoreUri = null
+                    viewModel.restore(uri)
+                }) { Text(stringResource(R.string.restore)) }
+            },
             dismissButton = { TextButton(onClick = { restoreUri = null }) { Text(stringResource(R.string.cancel)) } },
         )
     }
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
-            snackbar.showSnackbar(resources.getString(when (event) {
-                SettingsEvent.BACKUP_SUCCEEDED -> R.string.backup_succeeded
-                SettingsEvent.BACKUP_FAILED -> R.string.backup_failed
-                SettingsEvent.RESTORE_SUCCEEDED -> R.string.restore_succeeded
-                SettingsEvent.RESTORE_FAILED -> R.string.restore_failed
-            }))
+            snackbar.showSnackbar(
+                resources.getString(
+                    when (event) {
+                        SettingsEvent.BACKUP_SUCCEEDED -> R.string.backup_succeeded
+                        SettingsEvent.BACKUP_FAILED -> R.string.backup_failed
+                        SettingsEvent.RESTORE_SUCCEEDED -> R.string.restore_succeeded
+                        SettingsEvent.RESTORE_FAILED -> R.string.restore_failed
+                    },
+                ),
+            )
         }
     }
 }
 
-private fun showDatePicker(context: Context, current: String, onDate: (String) -> Unit) {
+private fun showDatePicker(
+    context: Context,
+    current: String,
+    onDate: (String) -> Unit,
+) {
     val initial = runCatching { LocalDate.parse(current) }.getOrDefault(LocalDate.now())
     DatePickerDialog(
         context,
@@ -518,10 +605,12 @@ private fun showDatePicker(context: Context, current: String, onDate: (String) -
 }
 
 private fun notificationsGranted(context: Context): Boolean =
-    Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+    Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
 
-private tailrec fun Context.findActivity(): Activity? = when (this) {
-    is Activity -> this
-    is ContextWrapper -> baseContext.findActivity()
-    else -> null
-}
+private tailrec fun Context.findActivity(): Activity? =
+    when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }

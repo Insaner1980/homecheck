@@ -62,7 +62,14 @@ data class MaintenanceFormState(
     val isSaving: Boolean = false,
 )
 
-private data class RepeatPreset(val label: Int, val interval: Int?, val unit: RecurrenceUnit?)
+private const val INTERVAL_FIELD_WEIGHT = 0.45f
+private const val RECURRENCE_UNIT_WEIGHT = 0.55f
+
+private data class RepeatPreset(
+    val label: Int,
+    val interval: Int?,
+    val unit: RecurrenceUnit?,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +87,11 @@ fun MaintenanceFormScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(if (state.taskId == null) R.string.add_maintenance else R.string.edit_maintenance)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBack,
+                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) }
+                },
                 actions = { TextButton(onClick = onSave, enabled = !state.isSaving) { Text(stringResource(R.string.save)) } },
             )
         },
@@ -125,7 +136,11 @@ fun MaintenanceFormScreen(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.reminder_enabled), style = MaterialTheme.typography.titleMedium)
-                    Text(stringResource(R.string.reminder_enabled_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        stringResource(R.string.reminder_enabled_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
                 Switch(checked = state.reminderEnabled, onCheckedChange = { onStateChange(state.copy(reminderEnabled = it)) })
             }
@@ -157,7 +172,10 @@ private fun AssetSelector(
             assets.forEach { asset ->
                 DropdownMenuItem(
                     text = { Text(asset.name) },
-                    onClick = { open = false; onStateChange(state.copy(assetId = asset.id, assetError = false)) },
+                    onClick = {
+                        open = false
+                        onStateChange(state.copy(assetId = asset.id, assetError = false))
+                    },
                 )
             }
         }
@@ -166,26 +184,36 @@ private fun AssetSelector(
 }
 
 @Composable
-private fun RepeatOptions(state: MaintenanceFormState, onStateChange: (MaintenanceFormState) -> Unit) {
-    val presets = listOf(
-        RepeatPreset(R.string.does_not_repeat, null, null),
-        RepeatPreset(R.string.weekly, 1, RecurrenceUnit.WEEKS),
-        RepeatPreset(R.string.monthly, 1, RecurrenceUnit.MONTHS),
-        RepeatPreset(R.string.every_three_months, 3, RecurrenceUnit.MONTHS),
-        RepeatPreset(R.string.every_six_months, 6, RecurrenceUnit.MONTHS),
-        RepeatPreset(R.string.yearly, 1, RecurrenceUnit.YEARS),
-        RepeatPreset(R.string.custom, -1, RecurrenceUnit.DAYS),
-    )
+private fun RepeatOptions(
+    state: MaintenanceFormState,
+    onStateChange: (MaintenanceFormState) -> Unit,
+) {
+    val presets =
+        listOf(
+            RepeatPreset(R.string.does_not_repeat, null, null),
+            RepeatPreset(R.string.weekly, 1, RecurrenceUnit.WEEKS),
+            RepeatPreset(R.string.monthly, 1, RecurrenceUnit.MONTHS),
+            RepeatPreset(R.string.every_three_months, 3, RecurrenceUnit.MONTHS),
+            RepeatPreset(R.string.every_six_months, 6, RecurrenceUnit.MONTHS),
+            RepeatPreset(R.string.yearly, 1, RecurrenceUnit.YEARS),
+            RepeatPreset(R.string.custom, -1, RecurrenceUnit.DAYS),
+        )
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         presets.forEach { preset ->
-            val selected = if (preset.interval == -1) {
-                state.usesCustomRepeat()
-            } else state.recurrenceInterval == preset.interval?.toString().orEmpty() && state.recurrenceUnit == preset.unit
+            val selected =
+                if (preset.interval == -1) {
+                    state.usesCustomRepeat()
+                } else {
+                    state.recurrenceInterval == preset.interval?.toString().orEmpty() && state.recurrenceUnit == preset.unit
+                }
             FilterChip(
                 selected = selected,
                 onClick = {
-                    if (preset.interval == -1) onStateChange(state.copy(recurrenceInterval = "2", recurrenceUnit = RecurrenceUnit.DAYS))
-                    else onStateChange(state.copy(recurrenceInterval = preset.interval?.toString().orEmpty(), recurrenceUnit = preset.unit))
+                    if (preset.interval == -1) {
+                        onStateChange(state.copy(recurrenceInterval = "2", recurrenceUnit = RecurrenceUnit.DAYS))
+                    } else {
+                        onStateChange(state.copy(recurrenceInterval = preset.interval?.toString().orEmpty(), recurrenceUnit = preset.unit))
+                    }
                 },
                 label = { Text(stringResource(preset.label)) },
             )
@@ -195,17 +223,21 @@ private fun RepeatOptions(state: MaintenanceFormState, onStateChange: (Maintenan
 
 private fun MaintenanceFormState.usesCustomRepeat(): Boolean {
     val preset = recurrenceInterval to recurrenceUnit
-    return recurrenceUnit != null && preset !in setOf(
-        "1" to RecurrenceUnit.WEEKS,
-        "1" to RecurrenceUnit.MONTHS,
-        "3" to RecurrenceUnit.MONTHS,
-        "6" to RecurrenceUnit.MONTHS,
-        "1" to RecurrenceUnit.YEARS,
-    )
+    return recurrenceUnit != null && preset !in
+        setOf(
+            "1" to RecurrenceUnit.WEEKS,
+            "1" to RecurrenceUnit.MONTHS,
+            "3" to RecurrenceUnit.MONTHS,
+            "6" to RecurrenceUnit.MONTHS,
+            "1" to RecurrenceUnit.YEARS,
+        )
 }
 
 @Composable
-private fun CustomRepeat(state: MaintenanceFormState, onStateChange: (MaintenanceFormState) -> Unit) {
+private fun CustomRepeat(
+    state: MaintenanceFormState,
+    onStateChange: (MaintenanceFormState) -> Unit,
+) {
     var unitMenu by remember { mutableStateOf(false) }
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         OutlinedTextField(
@@ -220,9 +252,9 @@ private fun CustomRepeat(state: MaintenanceFormState, onStateChange: (Maintenanc
             supportingText = if (state.recurrenceError) ({ Text(stringResource(R.string.recurrence_interval_required)) }) else null,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true,
-            modifier = Modifier.weight(0.45f),
+            modifier = Modifier.weight(INTERVAL_FIELD_WEIGHT),
         )
-        Column(Modifier.weight(0.55f)) {
+        Column(Modifier.weight(RECURRENCE_UNIT_WEIGHT)) {
             OutlinedButton(onClick = { unitMenu = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(recurrenceUnitLabel(state.recurrenceUnit ?: RecurrenceUnit.DAYS))
             }
@@ -230,7 +262,10 @@ private fun CustomRepeat(state: MaintenanceFormState, onStateChange: (Maintenanc
                 RecurrenceUnit.entries.forEach { unit ->
                     DropdownMenuItem(
                         text = { Text(recurrenceUnitLabel(unit)) },
-                        onClick = { unitMenu = false; onStateChange(state.copy(recurrenceUnit = unit)) },
+                        onClick = {
+                            unitMenu = false
+                            onStateChange(state.copy(recurrenceUnit = unit))
+                        },
                     )
                 }
             }
@@ -238,9 +273,12 @@ private fun CustomRepeat(state: MaintenanceFormState, onStateChange: (Maintenanc
     }
 }
 
-@Composable private fun recurrenceUnitLabel(unit: RecurrenceUnit) = stringResource(when (unit) {
-    RecurrenceUnit.DAYS -> R.string.days
-    RecurrenceUnit.WEEKS -> R.string.weeks
-    RecurrenceUnit.MONTHS -> R.string.months
-    RecurrenceUnit.YEARS -> R.string.years
-})
+@Composable private fun recurrenceUnitLabel(unit: RecurrenceUnit) =
+    stringResource(
+        when (unit) {
+            RecurrenceUnit.DAYS -> R.string.days
+            RecurrenceUnit.WEEKS -> R.string.weeks
+            RecurrenceUnit.MONTHS -> R.string.months
+            RecurrenceUnit.YEARS -> R.string.years
+        },
+    )

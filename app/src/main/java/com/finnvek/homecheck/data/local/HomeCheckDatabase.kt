@@ -20,7 +20,10 @@ import com.finnvek.homecheck.data.local.entity.MaintenanceTaskEntity
 @TypeConverters(Converters::class)
 abstract class HomeCheckDatabase : RoomDatabase() {
     abstract fun assetDao(): AssetDao
+
     abstract fun attachmentDao(): AttachmentDao
+
     abstract fun maintenanceDao(): MaintenanceDao
+
     abstract fun historyDao(): HistoryDao
 }

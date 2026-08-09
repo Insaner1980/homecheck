@@ -50,6 +50,8 @@ data class HomeUiState(
     val tasks: List<MaintenanceTaskEntity> = emptyList(),
 )
 
+private const val UPCOMING_PREVIEW_LIMIT = 3
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -65,9 +67,11 @@ fun HomeScreen(
     val assetsById = state.assets.associateBy(AssetEntity::id)
     val attention = state.tasks.filter { !it.dueDate.isAfter(today) }
     val upcoming = state.tasks.filter { it.dueDate.isAfter(today) }.sortedBy { it.dueDate }
-    val warranties = state.assets.filter { asset ->
-        asset.warrantyExpirationDate?.let { WarrantyRules.isExpiringSoon(it, today) } == true
-    }.sortedBy { it.warrantyExpirationDate }
+    val warranties =
+        state.assets
+            .filter { asset ->
+                asset.warrantyExpirationDate?.let { WarrantyRules.isExpiringSoon(it, today) } == true
+            }.sortedBy { it.warrantyExpirationDate }
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -83,11 +87,12 @@ fun HomeScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                start = HomeSpacing.page,
-                end = HomeSpacing.page,
-                bottom = 96.dp,
-            ),
+            contentPadding =
+                androidx.compose.foundation.layout.PaddingValues(
+                    start = HomeSpacing.page,
+                    end = HomeSpacing.page,
+                    bottom = 96.dp,
+                ),
         ) {
             item {
                 StatusArea(state.tasks, today)
@@ -117,11 +122,17 @@ fun HomeScreen(
             if (upcoming.isNotEmpty()) {
                 item {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text(stringResource(R.string.coming_up), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-                        if (upcoming.size > 3) TextButton(onClick = onSeeAllMaintenance) { Text(stringResource(R.string.see_all)) }
+                        Text(
+                            stringResource(R.string.coming_up),
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (upcoming.size > UPCOMING_PREVIEW_LIMIT) {
+                            TextButton(onClick = onSeeAllMaintenance) { Text(stringResource(R.string.see_all)) }
+                        }
                     }
                 }
-                items(upcoming.take(3), key = MaintenanceTaskEntity::id) { task ->
+                items(upcoming.take(UPCOMING_PREVIEW_LIMIT), key = MaintenanceTaskEntity::id) { task ->
                     MaintenanceRow(task, assetsById[task.assetId]?.name.orEmpty(), onTask)
                 }
             } else if (attention.isEmpty()) {
@@ -130,7 +141,10 @@ fun HomeScreen(
                 }
             }
             if (warranties.isNotEmpty()) {
-                item { Spacer(Modifier.height(HomeSpacing.section)); SectionTitle(stringResource(R.string.warranties)) }
+                item {
+                    Spacer(Modifier.height(HomeSpacing.section))
+                    SectionTitle(stringResource(R.string.warranties))
+                }
                 items(warranties, key = AssetEntity::id) { asset ->
                     val days = WarrantyRules.daysRemaining(requireNotNull(asset.warrantyExpirationDate), today).toInt()
                     Row(
@@ -150,23 +164,28 @@ fun HomeScreen(
 }
 
 @Composable
-private fun StatusArea(tasks: List<MaintenanceTaskEntity>, today: LocalDate) {
+private fun StatusArea(
+    tasks: List<MaintenanceTaskEntity>,
+    today: LocalDate,
+) {
     val status = homeAttentionStatus(tasks.map { it.dueDate }, today)
     val overdue = tasks.count { it.dueDate.isBefore(today) }
     val dueToday = tasks.count { it.dueDate == today }
     val dueSoon = tasks.count { it.dueDate.isAfter(today) && !it.dueDate.isAfter(today.plusDays(7)) }
-    val title = when (status) {
-        HomeAttentionStatus.ALL_CLEAR -> stringResource(R.string.everything_in_check)
-        HomeAttentionStatus.UPCOMING -> stringResource(R.string.on_top_of_things)
-        HomeAttentionStatus.DUE_TODAY -> stringResource(R.string.few_things_need_attention)
-        HomeAttentionStatus.OVERDUE -> stringResource(R.string.home_needs_attention)
-    }
-    val body = when (status) {
-        HomeAttentionStatus.ALL_CLEAR -> stringResource(R.string.no_attention_needed)
-        HomeAttentionStatus.UPCOMING -> pluralStringResource(R.plurals.items_this_week, dueSoon, dueSoon)
-        HomeAttentionStatus.DUE_TODAY -> pluralStringResource(R.plurals.tasks_due_today, dueToday, dueToday)
-        HomeAttentionStatus.OVERDUE -> pluralStringResource(R.plurals.tasks_overdue, overdue, overdue)
-    }
+    val title =
+        when (status) {
+            HomeAttentionStatus.ALL_CLEAR -> stringResource(R.string.everything_in_check)
+            HomeAttentionStatus.UPCOMING -> stringResource(R.string.on_top_of_things)
+            HomeAttentionStatus.DUE_TODAY -> stringResource(R.string.few_things_need_attention)
+            HomeAttentionStatus.OVERDUE -> stringResource(R.string.home_needs_attention)
+        }
+    val body =
+        when (status) {
+            HomeAttentionStatus.ALL_CLEAR -> stringResource(R.string.no_attention_needed)
+            HomeAttentionStatus.UPCOMING -> pluralStringResource(R.plurals.items_this_week, dueSoon, dueSoon)
+            HomeAttentionStatus.DUE_TODAY -> pluralStringResource(R.plurals.tasks_due_today, dueToday, dueToday)
+            HomeAttentionStatus.OVERDUE -> pluralStringResource(R.plurals.tasks_overdue, overdue, overdue)
+        }
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.primaryContainer,
@@ -192,17 +211,26 @@ private fun StatusArea(tasks: List<MaintenanceTaskEntity>, today: LocalDate) {
 }
 
 @Composable
-private fun MaintenanceRow(task: MaintenanceTaskEntity, assetName: String, onTask: (String) -> Unit) {
+private fun MaintenanceRow(
+    task: MaintenanceTaskEntity,
+    assetName: String,
+    onTask: (String) -> Unit,
+) {
     val context = LocalContext.current
-    Row(
-        Modifier.fillMaxWidth().clickable { onTask(task.id) }.padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(task.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(assetName, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    Column {
+        Row(
+            Modifier.fillMaxWidth().clickable { onTask(task.id) }.padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(task.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(assetName, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            Text(
+                dueLabel(context, task.dueDate),
+                color = if (task.dueDate.isBefore(LocalDate.now())) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
+            )
         }
-        Text(dueLabel(context, task.dueDate), color = if (task.dueDate.isBefore(LocalDate.now())) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
     }
-    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
 }

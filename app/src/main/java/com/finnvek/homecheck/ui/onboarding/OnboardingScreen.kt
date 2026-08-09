@@ -27,7 +27,10 @@ import com.finnvek.homecheck.ui.components.HomeStatusIllustration
 import com.finnvek.homecheck.ui.theme.HomeSpacing
 
 @Composable
-fun OnboardingScreen(onGetStarted: () -> Unit, modifier: Modifier = Modifier) {
+fun OnboardingScreen(
+    onGetStarted: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(HomeSpacing.page),
         verticalArrangement = Arrangement.Center,

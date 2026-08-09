@@ -1,9 +1,9 @@
 package com.finnvek.homecheck.domain
 
-import java.time.LocalDate
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.LocalDate
 
 class NotificationRulesTest {
     private val today = LocalDate.of(2026, 8, 7)
@@ -20,4 +20,3 @@ class NotificationRulesTest {
         assertFalse(MaintenanceNotificationRules.shouldNotify(today.minusDays(8), today))
     }
 }
-

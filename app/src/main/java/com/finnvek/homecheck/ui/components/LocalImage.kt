@@ -28,21 +28,24 @@ fun LocalImage(
 ) {
     val context = LocalContext.current
     val image by produceState<ImageBitmap?>(null, file?.path, uri) {
-        value = withContext(Dispatchers.IO) {
-            runCatching {
-                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                fun open() = when {
-                    file != null -> file.inputStream()
-                    uri != null -> context.contentResolver.openInputStream(uri)
-                    else -> null
-                }
-                open()?.use { BitmapFactory.decodeStream(it, null, bounds) }
-                var sample = 1
-                while (bounds.outWidth / sample > maxDimension * 2 || bounds.outHeight / sample > maxDimension * 2) sample *= 2
-                val options = BitmapFactory.Options().apply { inSampleSize = sample.coerceAtLeast(1) }
-                open()?.use { BitmapFactory.decodeStream(it, null, options) }?.asImageBitmap()
-            }.getOrNull()
-        }
+        value =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+
+                    fun open() =
+                        when {
+                            file != null -> file.inputStream()
+                            uri != null -> context.contentResolver.openInputStream(uri)
+                            else -> null
+                        }
+                    open()?.use { BitmapFactory.decodeStream(it, null, bounds) }
+                    var sample = 1
+                    while (bounds.outWidth / sample > maxDimension * 2 || bounds.outHeight / sample > maxDimension * 2) sample *= 2
+                    val options = BitmapFactory.Options().apply { inSampleSize = sample.coerceAtLeast(1) }
+                    open()?.use { BitmapFactory.decodeStream(it, null, options) }?.asImageBitmap()
+                }.getOrNull()
+            }
     }
     if (image != null) {
         Image(requireNotNull(image), contentDescription, modifier, contentScale = contentScale)

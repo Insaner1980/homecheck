@@ -10,12 +10,14 @@ import java.time.LocalDate
 
 @Entity(
     tableName = "maintenance_tasks",
-    foreignKeys = [ForeignKey(
-        entity = AssetEntity::class,
-        parentColumns = ["id"],
-        childColumns = ["assetId"],
-        onDelete = ForeignKey.CASCADE,
-    )],
+    foreignKeys = [
+        ForeignKey(
+            entity = AssetEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["assetId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
     indices = [Index("assetId"), Index("dueDate")],
 )
 data class MaintenanceTaskEntity(
@@ -31,8 +33,10 @@ data class MaintenanceTaskEntity(
     val updatedAt: Long,
 ) {
     val recurrence: Recurrence?
-        get() = if (recurrenceInterval != null && recurrenceUnit != null) {
-            Recurrence(recurrenceInterval, recurrenceUnit)
-        } else null
+        get() =
+            if (recurrenceInterval != null && recurrenceUnit != null) {
+                Recurrence(recurrenceInterval, recurrenceUnit)
+            } else {
+                null
+            }
 }
-

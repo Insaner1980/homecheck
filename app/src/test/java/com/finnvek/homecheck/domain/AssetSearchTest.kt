@@ -5,14 +5,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AssetSearchTest {
-    private val asset = AssetSearchDocument(
-        name = "Bosch dishwasher",
-        manufacturer = "Bosch",
-        modelNumber = "SMV6ZCX10E",
-        serialNumber = "FD 0203",
-        location = "Kitchen",
-        category = "Appliance",
-    )
+    private val asset =
+        AssetSearchDocument(
+            name = "Bosch dishwasher",
+            manufacturer = "Bosch",
+            modelNumber = "SMV6ZCX10E",
+            serialNumber = "FD 0203",
+            location = "Kitchen",
+            category = "Appliance",
+        )
 
     @Test fun `search matches all useful asset fields without case sensitivity`() {
         assertTrue(asset.matches("dishWASHER"))
@@ -28,4 +29,3 @@ class AssetSearchTest {
         assertFalse(asset.matches("heat pump"))
     }
 }
-

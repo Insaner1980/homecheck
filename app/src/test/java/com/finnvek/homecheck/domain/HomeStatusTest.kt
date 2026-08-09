@@ -1,8 +1,8 @@
 package com.finnvek.homecheck.domain
 
-import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.time.LocalDate
 
 class HomeStatusTest {
     private val today = LocalDate.of(2026, 8, 7)
@@ -20,4 +20,3 @@ class HomeStatusTest {
         assertEquals(HomeAttentionStatus.ALL_CLEAR, homeAttentionStatus(emptyList(), today))
     }
 }
-

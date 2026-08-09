@@ -44,7 +44,11 @@ class AssetFormScreenTest {
     }
 
     @Test fun selectedPhotoIsShownInTheForm() {
-        val photo = InstrumentationRegistry.getInstrumentation().targetContext.cacheDir.resolve("asset-form-photo.png")
+        val photo =
+            InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext.cacheDir
+                .resolve("asset-form-photo.png")
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         photo.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         bitmap.recycle()

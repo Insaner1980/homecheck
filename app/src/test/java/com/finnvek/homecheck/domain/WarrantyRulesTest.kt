@@ -1,10 +1,10 @@
 package com.finnvek.homecheck.domain
 
-import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.LocalDate
 
 class WarrantyRulesTest {
     private val today = LocalDate.of(2026, 8, 7)
@@ -25,4 +25,3 @@ class WarrantyRulesTest {
         assertFalse(WarrantyRules.shouldNotify(expiration, expiration.minusDays(2)))
     }
 }
-

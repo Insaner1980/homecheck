@@ -57,6 +57,6 @@ data class BackupHistory(
     val note: String? = null,
 )
 
-class UnsupportedBackupVersionException(version: Int) :
-    IllegalArgumentException("Unsupported backup schema version: $version")
-
+class UnsupportedBackupVersionException(
+    version: Int,
+) : IllegalArgumentException("Unsupported backup schema version: $version")

@@ -20,4 +20,3 @@ data class AssetEntity(
     val warrantyExpirationDate: LocalDate? = null,
     val notes: String? = null,
 )
-

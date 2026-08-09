@@ -26,13 +26,23 @@ object ReminderScheduler {
         )
     }
 
-    fun schedule(context: Context, hour: Int, minute: Int) {
+    fun schedule(
+        context: Context,
+        hour: Int,
+        minute: Int,
+    ) {
         val now = ZonedDateTime.now()
-        var next = now.withHour(hour.coerceIn(0, 23)).withMinute(minute.coerceIn(0, 59)).withSecond(0).withNano(0)
+        var next =
+            now
+                .withHour(hour.coerceIn(0, 23))
+                .withMinute(minute.coerceIn(0, 59))
+                .withSecond(0)
+                .withNano(0)
         if (!next.isAfter(now)) next = next.plusDays(1)
-        val request = PeriodicWorkRequestBuilder<ReminderWorker>(24, TimeUnit.HOURS)
-            .setInitialDelay(Duration.between(now, next))
-            .build()
+        val request =
+            PeriodicWorkRequestBuilder<ReminderWorker>(24, TimeUnit.HOURS)
+                .setInitialDelay(Duration.between(now, next))
+                .build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             WORK_NAME,
             ExistingPeriodicWorkPolicy.UPDATE,

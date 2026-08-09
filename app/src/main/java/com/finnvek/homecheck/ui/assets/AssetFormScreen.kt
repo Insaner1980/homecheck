@@ -12,12 +12,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +34,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import com.finnvek.homecheck.R
 import com.finnvek.homecheck.ui.components.LocalImage
@@ -59,6 +59,8 @@ data class AssetFormState(
     val saveError: Boolean = false,
     val isSaving: Boolean = false,
 )
+
+private const val PHOTO_ASPECT_RATIO = 16f / 9f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,7 +112,7 @@ fun AssetFormScreen(
                 LocalImage(
                     contentDescription = stringResource(R.string.photo),
                     uri = Uri.parse(photoUri),
-                    modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(16.dp)),
+                    modifier = Modifier.fillMaxWidth().aspectRatio(PHOTO_ASPECT_RATIO).clip(RoundedCornerShape(16.dp)),
                 )
             }
             Spacer(Modifier.height(16.dp))
@@ -167,14 +169,18 @@ fun AssetFormScreen(
 }
 
 @Composable
-private fun formattedDate(value: String, emptyLabel: Int): String =
-    if (value.isBlank()) stringResource(emptyLabel) else LocalDate.parse(value).localized()
+private fun formattedDate(
+    value: String,
+    emptyLabel: Int,
+): String = if (value.isBlank()) stringResource(emptyLabel) else LocalDate.parse(value).localized()
 
 @Composable
 private fun FormSection(title: String) {
-    Spacer(Modifier.height(HomeSpacing.section))
-    Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-    Spacer(Modifier.height(12.dp))
+    Column {
+        Spacer(Modifier.height(HomeSpacing.section))
+        Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(12.dp))
+    }
 }
 
 @Composable

@@ -3,8 +3,10 @@ package com.finnvek.homecheck.domain
 object AssetLimitPolicy {
     const val FREE_ASSET_LIMIT = 3
 
-    fun canCreate(currentCount: Int, isPremium: Boolean): Boolean =
-        isPremium || currentCount < FREE_ASSET_LIMIT
+    fun canCreate(
+        currentCount: Int,
+        isPremium: Boolean,
+    ): Boolean = isPremium || currentCount < FREE_ASSET_LIMIT
 }
 
 data class AssetSearchDocument(
@@ -22,4 +24,3 @@ data class AssetSearchDocument(
             .any { value -> value?.contains(needle, ignoreCase = true) == true }
     }
 }
-

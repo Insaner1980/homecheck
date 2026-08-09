@@ -18,8 +18,9 @@ import javax.inject.Singleton
 object DatabaseModule {
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): HomeCheckDatabase =
-        Room.databaseBuilder(context, HomeCheckDatabase::class.java, "homecheck.db").build()
+    fun provideDatabase(
+        @ApplicationContext context: Context,
+    ): HomeCheckDatabase = Room.databaseBuilder(context, HomeCheckDatabase::class.java, "homecheck.db").build()
 }
 
 @Module

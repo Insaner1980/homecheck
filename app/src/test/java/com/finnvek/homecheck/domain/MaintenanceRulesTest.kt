@@ -1,8 +1,8 @@
 package com.finnvek.homecheck.domain
 
-import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.time.LocalDate
 
 class MaintenanceRulesTest {
     private val today = LocalDate.of(2026, 8, 7)
@@ -38,4 +38,3 @@ class MaintenanceRulesTest {
         Recurrence(0, RecurrenceUnit.MONTHS)
     }
 }
-

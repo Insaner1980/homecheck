@@ -16,6 +16,8 @@ enum class BillingEvent { PURCHASED, PENDING, CANCELLED, ALREADY_OWNED, NOT_FOUN
 interface BillingManager {
     val state: StateFlow<BillingState>
     val events: SharedFlow<BillingEvent>
+
     fun launchPurchase(activity: Activity)
+
     fun refreshPurchases()
 }

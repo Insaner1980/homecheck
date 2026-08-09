@@ -7,12 +7,14 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "maintenance_history",
-    foreignKeys = [ForeignKey(
-        entity = AssetEntity::class,
-        parentColumns = ["id"],
-        childColumns = ["assetId"],
-        onDelete = ForeignKey.CASCADE,
-    )],
+    foreignKeys = [
+        ForeignKey(
+            entity = AssetEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["assetId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
     indices = [Index("assetId"), Index("completedAt")],
 )
 data class MaintenanceHistoryEntity(
@@ -23,4 +25,3 @@ data class MaintenanceHistoryEntity(
     val completedAt: Long,
     val note: String? = null,
 )
-

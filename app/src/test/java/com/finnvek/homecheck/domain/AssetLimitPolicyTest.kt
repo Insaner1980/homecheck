@@ -21,4 +21,3 @@ class AssetLimitPolicyTest {
         assertTrue(AssetLimitPolicy.canCreate(currentCount = 300, isPremium = true))
     }
 }
-

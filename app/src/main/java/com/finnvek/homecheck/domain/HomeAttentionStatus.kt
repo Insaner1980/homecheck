@@ -4,7 +4,10 @@ import java.time.LocalDate
 
 enum class HomeAttentionStatus { ALL_CLEAR, UPCOMING, DUE_TODAY, OVERDUE }
 
-fun homeAttentionStatus(dueDates: List<LocalDate>, today: LocalDate = LocalDate.now()): HomeAttentionStatus {
+fun homeAttentionStatus(
+    dueDates: List<LocalDate>,
+    today: LocalDate = LocalDate.now(),
+): HomeAttentionStatus {
     val statuses = dueDates.map { maintenanceStatus(it, today) }
     return when {
         MaintenanceStatus.OVERDUE in statuses -> HomeAttentionStatus.OVERDUE
@@ -13,4 +16,3 @@ fun homeAttentionStatus(dueDates: List<LocalDate>, today: LocalDate = LocalDate.
         else -> HomeAttentionStatus.ALL_CLEAR
     }
 }
-

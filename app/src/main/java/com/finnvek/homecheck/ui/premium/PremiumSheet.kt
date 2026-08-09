@@ -48,15 +48,21 @@ fun PremiumSheet(
         Benefit(stringResource(R.string.no_subscription))
         Spacer(Modifier.height(20.dp))
         when {
-            state.isLoading -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                CircularProgressIndicator()
+            state.isLoading -> {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    CircularProgressIndicator()
+                }
             }
+
             state.isAvailable && state.formattedPrice != null -> {
                 Text(stringResource(R.string.one_time_price, state.formattedPrice), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(12.dp))
                 Button(onClick = onPurchase, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.unlock_premium)) }
             }
-            else -> Text(stringResource(R.string.billing_unavailable), color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+            else -> {
+                Text(stringResource(R.string.billing_unavailable), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         Spacer(Modifier.height(8.dp))
         OutlinedButton(onClick = onRestore, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.restore_purchase)) }
@@ -66,9 +72,11 @@ fun PremiumSheet(
 
 @Composable
 private fun Benefit(text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-        Text(text)
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Text(text)
+        }
+        Spacer(Modifier.height(10.dp))
     }
-    Spacer(Modifier.height(10.dp))
 }

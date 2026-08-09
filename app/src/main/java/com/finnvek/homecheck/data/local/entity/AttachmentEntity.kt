@@ -9,12 +9,14 @@ enum class AttachmentType { ASSET_PHOTO, RECEIPT, MANUAL, WARRANTY, OTHER }
 
 @Entity(
     tableName = "attachments",
-    foreignKeys = [ForeignKey(
-        entity = AssetEntity::class,
-        parentColumns = ["id"],
-        childColumns = ["assetId"],
-        onDelete = ForeignKey.CASCADE,
-    )],
+    foreignKeys = [
+        ForeignKey(
+            entity = AssetEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["assetId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
     indices = [Index("assetId"), Index(value = ["localPath"], unique = true)],
 )
 data class AttachmentEntity(
@@ -26,4 +28,3 @@ data class AttachmentEntity(
     val localPath: String,
     val createdAt: Long,
 )
-

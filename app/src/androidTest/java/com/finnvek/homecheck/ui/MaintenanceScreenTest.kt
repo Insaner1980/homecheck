@@ -1,24 +1,24 @@
 package com.finnvek.homecheck.ui
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import com.finnvek.homecheck.data.local.entity.AssetEntity
 import com.finnvek.homecheck.data.local.entity.MaintenanceHistoryEntity
 import com.finnvek.homecheck.data.local.entity.MaintenanceTaskEntity
 import com.finnvek.homecheck.ui.maintenance.MaintenanceScreen
 import com.finnvek.homecheck.ui.maintenance.MaintenanceUiState
 import com.finnvek.homecheck.ui.theme.HomeCheckTheme
-import java.time.LocalDate
-import java.time.ZoneId
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
-import org.junit.Assert.assertEquals
+import java.time.LocalDate
+import java.time.ZoneId
 
 class MaintenanceScreenTest {
     @get:Rule val compose = createComposeRule()
@@ -50,7 +50,10 @@ class MaintenanceScreenTest {
             HomeCheckTheme {
                 MaintenanceScreen(
                     state = state,
-                    onShowHistory = {}, onAddMaintenance = {}, onAddAsset = {}, onTask = {},
+                    onShowHistory = {},
+                    onAddMaintenance = {},
+                    onAddAsset = {},
+                    onTask = {},
                     onComplete = { completedTask = it },
                 )
             }
@@ -60,11 +63,25 @@ class MaintenanceScreenTest {
         assertEquals("task", completedTask)
 
         compose.runOnIdle {
-            state = MaintenanceUiState(
-                assets = listOf(asset),
-                history = listOf(MaintenanceHistoryEntity("history", asset.id, task.id, task.title, LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())),
-                showHistory = true,
-            )
+            state =
+                MaintenanceUiState(
+                    assets = listOf(asset),
+                    history =
+                        listOf(
+                            MaintenanceHistoryEntity(
+                                "history",
+                                asset.id,
+                                task.id,
+                                task.title,
+                                LocalDate
+                                    .now()
+                                    .atStartOfDay(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli(),
+                            ),
+                        ),
+                    showHistory = true,
+                )
         }
         compose.onNodeWithText("Clean filter").assertIsDisplayed()
         compose.onNodeWithText("Heat pump").assertIsDisplayed()
