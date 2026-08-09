@@ -23,13 +23,13 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # Lukittu versioon v7.0.1.
 
       - name: Set up Java 17
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # Lukittu versioon v5.6.0.
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # Lukittu versioon v5.7.0.
         with:
           distribution: temurin
           java-version: "17"
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@d1ba80a13dd99fba24a470575428917156a28b43 # Lukittu versioon v4.37.5.
+        uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3 # Lukittu versioon v4.37.6.
         with:
           languages: java-kotlin
           build-mode: manual
@@ -38,4 +38,4 @@ jobs:
         run: ./gradlew assembleDebug --no-daemon
 
       - name: Analyze
-        uses: github/codeql-action/analyze@d1ba80a13dd99fba24a470575428917156a28b43 # Lukittu versioon v4.37.5.
+        uses: github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3 # Lukittu versioon v4.37.6.
