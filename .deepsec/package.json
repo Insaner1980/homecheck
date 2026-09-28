@@ -13,11 +13,11 @@
     "test:matchers": "tsc --project tsconfig.json --noEmit false --outDir .tmp/test-build && node --test .tmp/test-build/matchers/security-matchers.test.js"
   },
   "dependencies": {
-    "deepsec": "2.2.9"
+    "deepsec": "2.3.10"
   },
   "devDependencies": {
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.6.3",
     "typescript": "^7.0.2",
-    "zod": "4.4.3"
+    "zod": "4.6.5"
   }
 }
